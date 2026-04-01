@@ -1,15 +1,25 @@
 import { useState } from "react";
-import { View, Text, TextInput, Pressable, StyleSheet } from "react-native";
+import { View, Text, TextInput, Pressable, StyleSheet, ActivityIndicator  } from "react-native";
 import { useRouter } from "expo-router";
+import { createSession } from "../src/services/api";
 
 export default function HomeScreen() {
     const router = useRouter();
     const [joinCode, setJoinCode] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
 
     const handleCreate = async () => {
-        //TODO: call POST /sessions
-        //For now navigate with placeholder code
-        router.push("/lobby/ABC123");
+      try {
+        setLoading(true);
+        setError(null);
+        const session = await createSession();
+        router.push(`/lobby/${session.code}`);
+      } catch (e) {
+        setError("Failed to create session. Is the server running?");
+      } finally {
+        setLoading(false);
+      }
     };
 
     const handleJoin = async () => {
@@ -22,9 +32,23 @@ export default function HomeScreen() {
             <Text style={styles.title}>Eclipse Companion</Text>
             <Text style={styles.subtitle}>2nd Dawn for the Galaxy</Text>
 
-            <Pressable style={styles.primaryButton} onPress={handleCreate}>
+            {error && (
+              <View style={styles.errorBox}>
+                <Text style={styles.errorText}>{error}</Text>
+              </View>
+            )}
+
+            <Pressable style={[styles.primaryButton, loading && styles.disabled]} 
+              onPress={handleCreate}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
                 <Text style={styles.buttonText}>Create Session</Text>
+              )}
             </Pressable>
+
             <View style={styles.divider}>
                 <Text style={styles.dividerText}>or Join a Session</Text>
             </View>
@@ -68,6 +92,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#888",
     marginBottom: 48,
+  },
+  errorBox: {
+    backgroundColor: "#2a0a0a",
+    borderWidth: 1,
+    borderColor: "#dc2626",
+    borderRadius: 8,
+    padding: 12,
+    width: "100%",
+    marginBottom: 16,
+  },
+  errorText: {
+    color: "#dc2626",
+    fontSize: 13,
   },
   primaryButton: {
     backgroundColor: "#5b21b6",

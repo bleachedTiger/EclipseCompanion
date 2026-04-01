@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { View, Text, TextInput, Pressable, StyleSheet } from "react-native";
+import { View, Text, Pressable, StyleSheet, ActivityIndicator } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
+import { startSession } from "../../src/services/api";
 
 const PLAYER_COUNTS = [2, 3, 4, 5, 6];
 
@@ -8,10 +9,20 @@ export default function LobbyScreen() {
     const { code } = useLocalSearchParams();
     const router = useRouter();
     const [playerCount, setPlayerCount] = useState(4);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
 
     const handleStartGame = async () => {
-        // TODO: call POST /sessions/{code}/start
+      try {
+        setLoading(true);
+        setError(null);
+        await startSession(code, playerCount);
         router.push(`/board/${code}/military`);
+      } catch (e) {
+        setError("Failed to start session. Is the server running?");
+      } finally {
+        setLoading(false);
+      }
     };
 
     return(
@@ -19,6 +30,12 @@ export default function LobbyScreen() {
             <Text style={styles.label}>Session Code</Text>
             <Text style={styles.code}>{code}</Text>
             <Text style={styles.hint}>Share this code with your friends to join the session</Text>
+
+            {error && (
+              <View style={styles.errorBox}>
+                <Text style={styles.errorText}>{error}</Text>
+              </View>
+            )}
 
             <View style={styles.section}>
                 <Text style={styles.sectionLabel}>Player Count</Text>
@@ -45,8 +62,16 @@ export default function LobbyScreen() {
                 </View>
             </View>
 
-            <Pressable style={styles.startButton} onPress={handleStartGame}>
+            <Pressable 
+            style={[styles.startButton, loading && styles.disabled]} 
+            onPress={handleStartGame}
+            disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
                 <Text style={styles.startButtonText}>Start Game</Text>
+              )}
             </Pressable>
         </View>
     );
@@ -78,6 +103,19 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: "#555",
     marginBottom: 48,
+  },
+  errorBox: {
+    backgroundColor: "#2a0a0a",
+    borderWidth: 1,
+    borderColor: "#dc2626",
+    borderRadius: 8,
+    padding: 12,
+    width: "100%",
+    marginBottom: 16,
+  },
+  errorText: {
+    color: "#dc2626",
+    fontSize: 13,
   },
   section: {
     width: "100%",
@@ -128,5 +166,8 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     fontWeight: "600",
+  },
+  disabled: {
+    opacity: 0.4,
   },
 });
