@@ -63,9 +63,8 @@ public class SessionController {
         return ResponseEntity.ok(tile);
     }
 
-    // GET /sessions/{code}/board
     @GetMapping("/{code}/board")
-    public ResponseEntity<Map<String, List<TechPool>>> getBoard(@PathVariable String code) {
+    public ResponseEntity<Map<String, List<BoardTileDTO>>> getBoard(@PathVariable String code) {
         return ResponseEntity.ok(sessionService.getBoard(code));
     }
 

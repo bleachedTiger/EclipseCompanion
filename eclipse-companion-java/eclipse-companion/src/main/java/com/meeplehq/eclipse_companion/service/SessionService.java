@@ -1,5 +1,6 @@
 package com.meeplehq.eclipse_companion.service;
 
+import com.meeplehq.eclipse_companion.controller.BoardTileDTO;
 import com.meeplehq.eclipse_companion.service.SessionCodeGenerator;
 import com.meeplehq.eclipse_companion.model.Session;
 import com.meeplehq.eclipse_companion.model.TechPool;
@@ -124,19 +125,35 @@ public class SessionService {
         return techPoolRepository.save(tile);
     }
 
-    // Get board state grouped by track
-    public Map<String, List<TechPool>> getBoard(String code) {
+    public Map<String, List<BoardTileDTO>> getBoard(String code) {
         Session session = getSession(code);
 
         return Map.of(
-                "military", techPoolRepository.findBySessionAndTechTile_TrackAndStatus(
-                        session, TechTile.Track.MILITARY, TechPool.Status.AVAILABLE),
-                "grid", techPoolRepository.findBySessionAndTechTile_TrackAndStatus(
-                        session, TechTile.Track.GRID, TechPool.Status.AVAILABLE),
-                "nano", techPoolRepository.findBySessionAndTechTile_TrackAndStatus(
-                        session, TechTile.Track.NANO, TechPool.Status.AVAILABLE),
-                "rare", techPoolRepository.findBySessionAndTechTile_TrackAndStatus(
-                        session, TechTile.Track.RARE, TechPool.Status.AVAILABLE)
+                "military", groupTiles(techPoolRepository
+                        .findBySessionAndTechTile_TrackAndStatus(
+                                session, TechTile.Track.MILITARY, TechPool.Status.AVAILABLE)),
+                "grid", groupTiles(techPoolRepository
+                        .findBySessionAndTechTile_TrackAndStatus(
+                                session, TechTile.Track.GRID, TechPool.Status.AVAILABLE)),
+                "nano", groupTiles(techPoolRepository
+                        .findBySessionAndTechTile_TrackAndStatus(
+                                session, TechTile.Track.NANO, TechPool.Status.AVAILABLE)),
+                "rare", groupTiles(techPoolRepository
+                        .findBySessionAndTechTile_TrackAndStatus(
+                                session, TechTile.Track.RARE, TechPool.Status.AVAILABLE))
         );
+    }
+
+    private List<BoardTileDTO> groupTiles(List<TechPool> tiles) {
+        // Group by techTile id, keep one pool entry per unique tech, count duplicates
+        Map<Long, List<TechPool>> grouped = tiles.stream()
+                .collect(java.util.stream.Collectors.groupingBy(
+                        t -> t.getTechTile().getId()
+                ));
+
+        return grouped.values().stream()
+                .map(group -> BoardTileDTO.from(group.get(0), group.size()))
+                .sorted(java.util.Comparator.comparingInt(BoardTileDTO::getCost))
+                .collect(java.util.stream.Collectors.toList());
     }
 }
