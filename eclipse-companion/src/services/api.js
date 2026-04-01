@@ -1,4 +1,4 @@
-const BASE_URL = "https://eclipse-api.meeplehq.com";
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? "https://eclipse-api.meeplehq.com";
 
 // SESSIONS
 export const createSession = async (playerCount) => {
