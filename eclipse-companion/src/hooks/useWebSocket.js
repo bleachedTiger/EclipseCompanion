@@ -1,48 +1,38 @@
 import { useEffect, useRef, useCallback } from "react";
+import { Client } from "@stomp/stompjs";
 
-const WS_URL = "wss://eclipse-api.meeplehq.com/ws";
+const WS_URL = "ws://eclipse-api.meeplehq.com/ws/websocket";
 
 export default function useWebSocket(code, onMessage) {
-  const ws = useRef(null);
+  const client = useRef(null);
 
   const connect = useCallback(() => {
-    ws.current = new WebSocket(`${WS_URL}/sessions/${code}`);
+    client.current = new Client({
+      brokerURL: WS_URL,
+      reconnectDelay: 3000,
+      onConnect: () => {
+        console.log("STOMP connected:", code);
+        client.current.subscribe(`/topic/sessions/${code}`, (message) => {
+          try {
+            const data = JSON.parse(message.body);
+            onMessage(data);
+          } catch (e) {
+            console.error("STOMP message parse error:", e);
+          }
+        });
+      },
+      onStompError: (frame) => {
+        console.error("STOMP error:", frame);
+      },
+    });
 
-    ws.current.onopen = () => {
-      console.log("WebSocket connected:", code);
-    };
-
-    ws.current.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        onMessage(data);
-      } catch (e) {
-        console.error("WebSocket message parse error:", e);
-      }
-    };
-
-    ws.current.onerror = (error) => {
-      console.error("WebSocket error:", error);
-    };
-
-    ws.current.onclose = () => {
-      console.log("WebSocket disconnected, attempting reconnect in 3s...");
-      setTimeout(connect, 3000);
-    };
-  }, [code]);
+    client.current.activate();
+  }, [code, onMessage]);
 
   useEffect(() => {
     connect();
     return () => {
-      ws.current?.close();
+      client.current?.deactivate();
     };
   }, [connect]);
-
-  const send = useCallback((data) => {
-    if (ws.current?.readyState === WebSocket.OPEN) {
-      ws.current.send(JSON.stringify(data));
-    }
-  }, []);
-
-  return { send };
 }
