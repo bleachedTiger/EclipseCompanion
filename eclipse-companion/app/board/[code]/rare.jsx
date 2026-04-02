@@ -1,13 +1,13 @@
 import { useState, useEffect, useCallback } from "react";
 import { View, FlatList, StyleSheet, ActivityIndicator, Text } from "react-native";
-import { useLocalSearchParams } from "expo-router";
+import { useGlobalSearchParams } from "expo-router";
 import TechCard from "../../../src/components/TechCard";
 import TechModal from "../../../src/components/TechModal";
 import { getBoard, purchaseTile } from "../../../src/services/api";
 import useWebSocket from "../../../src/hooks/useWebSocket";
 
 export default function RareTab() {
-  const { code } = useLocalSearchParams();
+  const { code } = useGlobalSearchParams();
   const [tiles, setTiles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedTile, setSelectedTile] = useState(null);
@@ -70,7 +70,7 @@ return (
     <View style={styles.container}>
       <FlatList
         data={tiles}
-        keyExtractor={(item) => item.id.toString()}
+        keyExtractor={(item) => item.poolId.toString()}
         numColumns={3}
         contentContainerStyle={styles.list}
         renderItem={({ item }) => (

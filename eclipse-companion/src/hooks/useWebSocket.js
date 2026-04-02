@@ -1,8 +1,8 @@
 import { useEffect, useRef, useCallback } from "react";
 import { Client } from "@stomp/stompjs";
 
-const WS_BASE = (process.env.EXPO_PUBLIC_API_URL ?? "https://eclipse-api.meeplehq.com")
-  .replace("http", "ws");
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? "https://eclipse-api.meeplehq.com";
+const WS_URL = BASE_URL.replace("https", "wss").replace("http", "ws") + "/ws/websocket";
 
 export default function useWebSocket(code, onMessage) {
   const client = useRef(null);
