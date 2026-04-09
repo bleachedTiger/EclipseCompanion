@@ -56,7 +56,7 @@ export default function BoardLayoutInner() {
   return (
     <>
       <Tabs
-        screenOptions={{
+        screenOptions={({ route }) => ({
           headerStyle: { backgroundColor: "#0f0f1a" },
           headerTintColor: "#fff",
           tabBarStyle: {
@@ -65,6 +65,14 @@ export default function BoardLayoutInner() {
           },
           tabBarActiveTintColor: "#fff",
           tabBarInactiveTintColor: "#555",
+          headerTitle: () => (
+            <View style={styles.headerTitle}>
+              <Text style={styles.sessionCode}>Session: {code}</Text>
+              <Text style={styles.headerTrackLabel}>
+                {route.name.charAt(0).toUpperCase() + route.name.slice(1)}
+              </Text>
+            </View>
+          ),
           headerRight: () => (
             <View style={styles.headerRight}>
               <Text style={styles.roundText}>Round {round}</Text>
@@ -76,7 +84,7 @@ export default function BoardLayoutInner() {
               </Pressable>
             </View>
           ),
-        }}
+        })}
       >
         {TRACKS.map((track) => (
           <Tabs.Screen
@@ -122,6 +130,20 @@ const styles = StyleSheet.create({
   endRoundText: {
     color: "#fff",
     fontSize: 13,
+    fontWeight: "600",
+  },
+  headerTitle: {
+    alignItems: "left",
+  },
+  sessionCode: {
+    color: "#555",
+    fontSize: 11,
+    letterSpacing: 3,
+    textTransform: "uppercase",
+  },
+  headerTrackLabel: {
+    color: "#fff",
+    fontSize: 17,
     fontWeight: "600",
   },
 });
