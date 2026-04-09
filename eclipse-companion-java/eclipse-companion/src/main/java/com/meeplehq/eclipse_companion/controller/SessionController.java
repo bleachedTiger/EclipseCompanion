@@ -36,12 +36,16 @@ public class SessionController {
 
     // POST /sessions/{code}/start
     @PostMapping("/{code}/start")
-    public ResponseEntity<Session> startSession(
+    public ResponseEntity<?> startSession(
             @PathVariable String code,
             @RequestBody StartSessionRequest request
     ) {
-        Session session = sessionService.startSession(code, request.playerCount());
-        return ResponseEntity.ok(session);
+        try {
+            Session session = sessionService.startSession(code, request.playerCount());
+            return ResponseEntity.ok(session);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(409).body(e.getMessage());
+        }
     }
 
     // POST /sessions/{code}/draw

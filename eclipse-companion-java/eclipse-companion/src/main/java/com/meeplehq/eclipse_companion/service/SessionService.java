@@ -51,6 +51,12 @@ public class SessionService {
     @Transactional
     public Session startSession(String code, int playerCount) {
         Session session = getSession(code);
+
+        System.out.println("startSession called for: " + code + " at: " + java.time.LocalDateTime.now());
+        if (session.getStatus() == Session.Status.ACTIVE) {
+            throw new RuntimeException("Session already active: " + code);
+        }
+
         session.setPlayerCount(playerCount);
         session.setStatus(Session.Status.ACTIVE);
 

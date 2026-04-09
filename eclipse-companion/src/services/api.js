@@ -1,4 +1,5 @@
 const BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? "https://eclipse-api.meeplehq.com";
+console.log("API BASE_URL:", BASE_URL);
 
 // SESSIONS
 export const createSession = async (playerCount) => {
@@ -23,8 +24,13 @@ export const startSession = async (code, playerCount) => {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ playerCount }),
   });
-  if (!response.ok) throw new Error("Failed to start session");
-  return response.json();
+  console.log("start response status:", response.status);
+  const body = await response.text();
+  console.log("start response body:", body);
+  if (response.status === 409 || response.ok) {
+    return response.status === 409 ? null : JSON.parse(body);
+  }
+  throw new Error("Failed to start session");
 };
 
 //TILES

@@ -1,80 +1,104 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { View, Text, Pressable, StyleSheet, ActivityIndicator } from "react-native";
-import { useRouter, useLocalSearchParams } from "expo-router";
-import { startSession } from "../../src/services/api";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { startSession, getSession } from "../../src/services/api";
 
 const PLAYER_COUNTS = [2, 3, 4, 5, 6];
 
 export default function LobbyScreen() {
-    const { code } = useLocalSearchParams();
-    const router = useRouter();
-    const [playerCount, setPlayerCount] = useState(4);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
-
-    const handleStartGame = async () => {
+  const { code } = useLocalSearchParams();
+  const router = useRouter();
+  const [playerCount, setPlayerCount] = useState(4);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  useEffect(() => {
+    const checkSession = async () => {
+      console.log("checkSession firing for code:", code);
       try {
-        setLoading(true);
-        setError(null);
-        await startSession(code, playerCount);
-        router.push(`/board/${code}/military`);
+        const session = await getSession(code);
+        console.log("session status:", session.status);
+        if (session.status === "ACTIVE") {
+          router.replace(`/board/${code}/military`);
+          return;
+        }
+        setPlayerCount(session.playerCount);
       } catch (e) {
-        setError("Failed to start session. Is the server running?");
+        setError("Session not found.");
       } finally {
         setLoading(false);
       }
     };
+    checkSession();
+  }, [code]);
 
-    return(
-        <View style={styles.container}>
-            <Text style={styles.label}>Session Code</Text>
-            <Text style={styles.code}>{code}</Text>
-            <Text style={styles.hint}>Share this code with your friends to join the session</Text>
 
-            {error && (
-              <View style={styles.errorBox}>
-                <Text style={styles.errorText}>{error}</Text>
-              </View>
-            )}
+  const handleStartGame = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      await startSession(code, playerCount);
+      router.replace(`/board/${code}/military`);
+    } catch (e) {
+      setError("Failed to start session. Is the server running?");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-            <View style={styles.section}>
-                <Text style={styles.sectionLabel}>Player Count</Text>
-                <View style={styles.playerCountRow}>
-                    {PLAYER_COUNTS.map(count => (
-                        <Pressable 
-                            key={count}
-                            style={[
-                                styles.countButton,
-                                playerCount === count && styles.countButtonActive,
-                            ]}
-                            onPress={() => setPlayerCount(count)}
-                        >
-                            <Text 
-                                style={[
-                                    styles.countButtonText,
-                                    playerCount === count && styles.countButtonTextActive,    
-                                ]}
-                            >
-                                {count}
-                            </Text>
-                        </Pressable>
-                    ))}
-                </View>
-            </View>
-
-            <Pressable 
-            style={[styles.startButton, loading && styles.disabled]} 
-            onPress={handleStartGame}
-            disabled={loading}
-            >
-              {loading ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={styles.startButtonText}>Start Game</Text>
-              )}
-            </Pressable>
-        </View>
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator color="#5b21b6" />
+      </View>
     );
+  }
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.label}>Session Code</Text>
+      <Text style={styles.code}>{code}</Text>
+      <Text style={styles.hint}>Share this code with other players</Text>
+
+      {error && (
+        <View style={styles.errorBox}>
+          <Text style={styles.errorText}>{error}</Text>
+        </View>
+      )}
+
+      <View style={styles.section}>
+        <Text style={styles.sectionLabel}>Number of Players</Text>
+        <View style={styles.playerCountRow}>
+          {PLAYER_COUNTS.map((count) => (
+            <Pressable
+              key={count}
+              style={[
+                styles.countButton,
+                playerCount === count && styles.countButtonActive,
+              ]}
+              onPress={() => setPlayerCount(count)}
+            >
+              <Text
+                style={[
+                  styles.countButtonText,
+                  playerCount === count && styles.countButtonTextActive,
+                ]}
+              >
+                {count}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+      </View>
+
+      <Pressable
+        style={[styles.startButton, loading && styles.disabled]}
+        onPress={handleStartGame}
+        disabled={loading}
+      >
+        <Text style={styles.startButtonText}>Start Game</Text>
+      </Pressable>
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
