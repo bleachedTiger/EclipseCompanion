@@ -1,10 +1,11 @@
-import { useState, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Tabs, useGlobalSearchParams } from "expo-router";
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import EndRoundModal from "./EndRoundModal";
 import useWebSocket from "../hooks/useWebSocket";
 import { drawTiles } from "../services/api";
 import { useSession } from "../context/SessionContext";
+import { getSession } from "../services/api";
 
 const TRACKS = [
   { name: "military", label: "Military", color: "#c026d3" },
@@ -19,6 +20,19 @@ export default function BoardLayoutInner() {
   const [round, setRound] = useState(1);
   const [showEndRound, setShowEndRound] = useState(false);
 
+  // fetch real round on mount
+  useEffect(() => {
+    const fetchRound = async () => {
+      try {
+        const session = await getSession(code);
+        setRound(session.round);
+      } catch (e) {
+        console.error("Failed to fetch session round:", e);
+      }
+    };
+    fetchRound();
+  }, [code]);
+
   const handleMessage = useCallback((data) => {
     if (data.type === "ROUND_DRAWN") {
       setRound(data.round);
@@ -30,8 +44,8 @@ export default function BoardLayoutInner() {
 
   const handleConfirmEndRound = async () => {
     try {
-      await drawTiles(code);
-      setRound((r) => r + 1);
+      const session = await drawTiles(code);
+      setRound(session.round);
       triggerRefetch();
       setShowEndRound(false);
     } catch (e) {

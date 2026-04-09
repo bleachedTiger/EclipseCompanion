@@ -34,7 +34,7 @@ const styles = StyleSheet.create({
 countBadge: {
     position: "absolute",
     bottom: 6,
-    left: 6,
+    right: 6,
     backgroundColor: "#fff",
     borderRadius: 999,
     width: 22,
