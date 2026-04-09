@@ -58,6 +58,7 @@ public class SessionController {
             @PathVariable String code,
             @PathVariable Long poolId
     ) {
+        System.out.println("Purchasing tile " + poolId + " for session " + code);
         TechPool tile = sessionService.purchaseTile(code, poolId);
         eventPublisher.publishTilePurchased(code, poolId, tile.getTechTile().getId());
         return ResponseEntity.ok(tile);

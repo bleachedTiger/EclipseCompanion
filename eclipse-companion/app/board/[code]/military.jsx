@@ -5,6 +5,7 @@ import TechCard from "../../../src/components/TechCard";
 import TechModal from "../../../src/components/TechModal";
 import { getBoard, purchaseTile } from "../../../src/services/api";
 import useWebSocket from "../../../src/hooks/useWebSocket";
+import { useSession } from "../../../src/context/SessionContext";
 
 export default function MilitaryTab() {
     const { code } = useGlobalSearchParams();
@@ -12,10 +13,11 @@ export default function MilitaryTab() {
     const [loading, setLoading] = useState(true);
     const [selectedTile, setSelectedTile] = useState(null);
 
+    const { lastDraw } = useSession();
+
     const fetchBoard = useCallback(async () => {
       try {
         const board = await getBoard(code);
-        console.log("board response:", JSON.stringify(board));
         setTiles(board.military ?? []);
       } catch (e) {
         console.error("Failed to fetch board:", e);
@@ -26,7 +28,7 @@ export default function MilitaryTab() {
 
     useEffect(() => {
       fetchBoard();
-    }, [fetchBoard]);
+    }, [lastDraw]);
 
     const handleMessage = useCallback((data) => {
       if (data.type === "TILE_PURCHASED") {
@@ -43,8 +45,17 @@ export default function MilitaryTab() {
 
   const handlePurchase = async (tile) => {
     try {
-      await purchaseTile(code, tile.poolId);
-      setTiles((prev) => prev.filter((t) => t.poolId !== tile.poolId));
+      const poolIdToUse = tile.poolIds[0];
+      await purchaseTile(code, poolIdToUse);
+      setTiles((prev) =>
+        prev
+          .map((t) =>
+            t.poolIds[0] === poolIdToUse
+              ? { ...t, poolIds: t.poolIds.slice(1), availableCount: t.availableCount - 1 }
+              : t
+          )
+          .filter((t) => t.availableCount > 0)
+      );
     } catch (e) {
       console.error("Failed to purchase tile:", e);
     }
@@ -61,7 +72,7 @@ export default function MilitaryTab() {
   if (tiles.length === 0) {
     return (
       <View style={styles.centered}>
-        <Text style={styles.emptyText}>No military tiles available</Text>
+        <Text style={styles.emptyText}>No Military Research available</Text>
       </View>
     );
   }
@@ -70,7 +81,7 @@ export default function MilitaryTab() {
     <View style={styles.container}>
       <FlatList
         data={tiles}
-        keyExtractor={(item) => item.poolId.toString()}
+        keyExtractor={(item) => item.poolIds[0].toString()}
         numColumns={3}
         contentContainerStyle={styles.list}
         renderItem={({ item }) => (

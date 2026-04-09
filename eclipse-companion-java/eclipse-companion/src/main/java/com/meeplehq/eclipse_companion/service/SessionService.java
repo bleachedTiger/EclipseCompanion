@@ -152,7 +152,7 @@ public class SessionService {
                 ));
 
         return grouped.values().stream()
-                .map(group -> BoardTileDTO.from(group.get(0), group.size()))
+                .map(BoardTileDTO::from)
                 .sorted(java.util.Comparator.comparingInt(BoardTileDTO::getCost))
                 .collect(java.util.stream.Collectors.toList());
     }

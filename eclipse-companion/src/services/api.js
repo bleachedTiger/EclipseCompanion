@@ -29,9 +29,11 @@ export const startSession = async (code, playerCount) => {
 
 //TILES
 export const drawTiles = async (code) => {
+  console.log("calling draw for code:", code);
   const response = await fetch(`${BASE_URL}/sessions/${code}/draw`, {
     method: "POST",
   });
+  console.log("draw response status:", response.status);
   if (!response.ok) throw new Error("Failed to draw tiles");
   return response.json();
 };
