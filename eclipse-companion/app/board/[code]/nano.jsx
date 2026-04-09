@@ -33,7 +33,13 @@ export default function NanoTab() {
   const handleMessage = useCallback((data) => {
     if (data.type === "TILE_PURCHASED") {
       setTiles((prev) =>
-        prev.filter((t) => t.poolId !== data.poolId)
+        prev
+          .map((t) =>
+            t.poolIds.includes(data.poolId)
+              ? { ...t, poolIds: t.poolIds.filter(id => id !== data.poolId), availableCount: t.availableCount - 1 }
+              : t
+          )
+          .filter((t) => t.availableCount > 0)
       );
     }
     if (data.type === "ROUND_DRAWN") {

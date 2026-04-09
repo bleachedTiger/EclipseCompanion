@@ -1,47 +1,45 @@
-import { View, Text, Modal, Pressable, StyleSheet } from "react-native";
+import { View, Text, Image, Modal, Pressable, StyleSheet } from "react-native";
+import { TILE_IMAGES } from "../constants/tileImages";
 
-export default function TechModal({ visible, onClose, tech, onPurchase }) {
-    if (!tech) return null;
+export default function TechModal({ tech, visible, onClose, onPurchase }) {
+  if (!tech) return null;
 
-    return(
-        <Modal
-            visible={visible}
-            transparent
-            animationType="fade"
-            onRequestClose={onClose}
-        >
-            <Pressable style={styles.overlay} onPress={onClose}>
-                <Pressable style={[styles.modal, { borderColor: tech.color }]}>
-                    <View style={styles.header}>
-                        <View>
-                            <Text style={styles.name}>{tech.name}</Text>
-                            <Text style={styles.track}>{tech.track}</Text>
-                        </View>
-                        <View style={styles.costBadge}>
-                            <Text style={styles.costText}>{tech.cost}</Text>
-                        </View>
-                    </View>
+  const image = TILE_IMAGES[tech.name];
 
-                    <Text style={styles.description}>{tech.description}</Text>
-
-                    <View style={styles.buttons}>
-                        <Pressable style={styles.cancelButton} onPress={onClose}>
-                            <Text style={styles.cancelText}>Cancel</Text>
-                        </Pressable>
-                        <Pressable 
-                            style={[styles.purchaseButton, {backgroundColor: tech.color}]}
-                            onPress={() => {
-                                onPurchase(tech);
-                                onClose();
-                            }}
-                            >
-                                <Text style={styles.purchaseText}>Purchase</Text>
-                        </Pressable>
-                    </View>
-                </Pressable>
+  return (
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={onClose}
+    >
+      <Pressable style={styles.overlay} onPress={onClose}>
+        <Pressable style={styles.modal}>
+          <Image
+            source={image}
+            style={styles.image}
+            resizeMode="contain"
+          />
+          <Text style={styles.name}>{tech.name}</Text>
+          <Text style={styles.description}>{tech.description}</Text>
+          <View style={styles.buttons}>
+            <Pressable style={styles.cancelButton} onPress={onClose}>
+              <Text style={styles.cancelText}>Cancel</Text>
             </Pressable>
-        </Modal>
-    )
+            <Pressable
+              style={[styles.purchaseButton, { backgroundColor: tech.color }]}
+              onPress={() => {
+                onPurchase(tech);
+                onClose();
+              }}
+            >
+              <Text style={styles.purchaseText}>Purchase</Text>
+            </Pressable>
+          </View>
+        </Pressable>
+      </Pressable>
+    </Modal>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -56,54 +54,19 @@ const styles = StyleSheet.create({
     backgroundColor: "#1e1e2e",
     borderRadius: 12,
     borderWidth: 1,
+    borderColor: "#333",
     padding: 24,
     width: "100%",
     gap: 16,
   },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-  },
-  name: {
-    color: "#fff",
-    fontSize: 20,
-    fontWeight: "700",
-    marginBottom: 4,
-  },
-  track: {
-    color: "#888",
-    fontSize: 12,
-    textTransform: "uppercase",
-    letterSpacing: 2,
-  },
-  costBadge: {
-    backgroundColor: "#0f0f1a",
+  image: {
+    width: "100%",
+    aspectRatio: 1,
     borderRadius: 8,
-    padding: 10,
-    alignItems: "center",
-    minWidth: 56,
-  },
-  costLabel: {
-    color: "#555",
-    fontSize: 10,
-    letterSpacing: 1,
-    marginBottom: 2,
-  },
-  costValue: {
-    color: "#fff",
-    fontSize: 22,
-    fontWeight: "700",
-  },
-  description: {
-    color: "#aaa",
-    fontSize: 14,
-    lineHeight: 20,
   },
   buttons: {
     flexDirection: "row",
     gap: 12,
-    marginTop: 8,
   },
   cancelButton: {
     flex: 1,
@@ -128,5 +91,17 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 15,
     fontWeight: "600",
+  },
+    name: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "700",
+    textAlign: "center",
+  },
+  description: {
+    color: "#aaa",
+    fontSize: 14,
+    lineHeight: 20,
+    textAlign: "center",
   },
 });
